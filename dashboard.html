@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IOT Dashboard - Monitor Arus DC Real-Time (Simulasi)</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
+    
+    <style>
+        body { 
+            font-family: 'Inter', sans-serif; 
+            text-align: center; 
+            padding: 20px; 
+            background-color: #f4f7f9;
+            color: #333;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #007bff;
+            margin-bottom: 5px;
+        }
+        .data-box { 
+            border: 3px solid #007bff; 
+            padding: 20px; 
+            margin: 20px auto; 
+            width: 300px; 
+            border-radius: 10px; 
+            background-color: #e6f0ff;
+            box-shadow: 0 2px 8px rgba(0, 123, 255, 0.2);
+        }
+        .nilai { 
+            font-size: 4em; 
+            font-weight: 700; 
+            color: #0056b3; 
+            margin-top: 5px;
+        }
+        #chartArea { 
+            max-width: 800px; 
+            margin: 40px auto; 
+            padding: 20px;
+            background: #fff;
+            border-radius: 10px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 5px;
+            font-weight: bold;
+            color: white;
+        }
+        .status-running { background-color: #28a745; }
+        .status-info { color: #6c757d; font-size: 0.9em; }
+        #errorMsg {
+            color: red;
+            display: none;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Dashboard Arus DC (Simulasi Real-Time)</h1>
+        <p class="status-info">Data dihasilkan secara acak (simulasi sensor).</p>
+        
+        <p>Status: <span id="statusBadge" class="status-badge status-running">RUNNING</span></p>
+        <p>Diperbarui terakhir: <span id="lastUpdated">Menunggu data...</span></p>
+
+        <div class="data-box">
+            <h2>Meter Arus DC (Ampere)</h2>
+            <div class="nilai" id="currentValue">--</div>
+            <p>Target Range: 4.5A - 5.5A</p>
+        </div>
+
+        <div id="chartArea">
+            <h2>Tren 10 Data Terakhir</h2>
+            <canvas id="currentChart"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const MAX_DATA_POINTS = 10;
+
+        let chartData = {
+            labels: [],
+            datasets: [{
+                label: 'Arus DC (A)',
+                data: [],
+                borderColor: '#007bff',
+                backgroundColor: 'rgba(0, 123, 255, 0.2)',
+                fill: true,
+                tension: 0.2
+            }]
+        };
+
+        const ctx = document.getElementById('currentChart').getContext('2d');
+        const currentChart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                maintainAspectRatio: true,
+                scales: {
+                    y: {
+                        min: 4.0, 
+                        max: 6.0,
+                        title: { display: true, text: 'Arus (A)' }
+                    }
+                },
+                plugins: {
+                    legend: { display: true }
+                }
+            }
+        });
+
+        // ✅ SIMULASI DATA: Generate random current between 4.0 and 6.0
+        function generateRandomCurrent() {
+            return parseFloat((4.0 + Math.random() * 2.0).toFixed(2)); // 4.00 – 6.00
+        }
+
+        // ✅ UPDATE UI dengan data simulasi
+        function updateUI() {
+            const nilaiArus = generateRandomCurrent();
+            const timestamp = new Date();
+            const timeString = timestamp.toLocaleTimeString('id-ID');
+
+            document.getElementById('currentValue').textContent = nilaiArus.toFixed(2);
+            document.getElementById('lastUpdated').textContent = timestamp.toLocaleString('id-ID');
+
+            // Update chart
+            if (chartData.labels.length >= MAX_DATA_POINTS) {
+                chartData.labels.shift();
+                chartData.datasets[0].data.shift();
+            }
+            chartData.labels.push(timeString);
+            chartData.datasets[0].data.push(nilaiArus);
+
+            currentChart.update('none');
+        }
+
+        // Jalankan pertama kali
+        updateUI();
+
+        // Perbarui setiap 2 detik
+        setInterval(updateUI, 2000);
+    </script>
+</body>
+</html>
